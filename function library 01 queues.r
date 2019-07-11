@@ -51,27 +51,23 @@
 
 {
 new.queue <- function() {
-retuned_queue <- new.env()
-retuned_queue$front <- new.env()
-retuned_queue$front$q <- NULL
-retuned_queue$front$prev <- NULL
-retuned_queue$last <- retuned_queue$front
-print (c("ls() in new.queue", ls()))
-return(retuned_queue)
+returned_queue <- new.env()
+returned_queue$front <- new.env()
+returned_queue$front$follow <- NULL
+returned_queue$front$prev <- NULL
+returned_queue$last <- returned_queue$front
+return(returned_queue)
 }
 
 
 ## add to end of queue
 enqueue <- function(queueIn, add){
-queueIn$last$q <- new.env()
-queueIn$last$q$prev <- queueIn$last
-queueIn$last <- queueIn$last$q
+queueIn$last$follow <- new.env()
+queueIn$last$follow$prev <- queueIn$last
+queueIn$last <- queueIn$last$follow
 queueIn$last$val <- add
-queueIn$last$q <- NULL
-# print (c("in enqueue, using env_print", queueIn$last$q))
-# env_print(queueIn$last$q)
-# print (c("in enqueue, using env_parents"))
-# print (env_parents(queueIn$last$q))
+queueIn$last$follow <- NULL
+
 }
 
 ## return front of queue and remove it
@@ -79,26 +75,27 @@ dequeue <- function(queueIn){
 if (is.empty(queueIn)) {
 	stop("Attempting to take element from empty queue")
 	}
-value <- queueIn$front$q$val
-queueIn$front <- queueIn$front$q
-queueIn$front$q$prev <- NULL
+value <- queueIn$front$follow$val
+queueIn$front <- queueIn$front$follow
+queueIn$front$follow$prev <- NULL
 return(value)
 }
 
 ## check to see if queue is empty
 is.empty <- function(queueIn){
-return(is.null(queueIn$front$q))
+return(is.null(queueIn$front$follow))
 }
 
 ## walk the queue and print out all values
 #
-travelQueue <- function(queueIn, n) {
+traverseQueue <- function(queueIn, n) {
 if (n == 0) {
 	return
 	} else {
 		n <- n - 1
-		print(queueIn$val)
-		travelQueue(queueIn$q, n)
+#		print(c("prev=", queueIn$prev, "val=", queueIn$val, "follow=", queueIn$follow))
+		print (queueIn$val)
+		traverseQueue(queueIn$follow, n)
 	}
 }
 
@@ -109,7 +106,7 @@ qq <- new.queue()
 for(i in 1:N){
 	enqueue(qq,i)
 }
-travelQueue(qq$front$q,N)
+traverseQueue(qq$front$follow,8)
 
 #while (! is.empty(qq)) {
 #	print(dequeue(qq))
