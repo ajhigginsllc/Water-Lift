@@ -65,10 +65,32 @@ enqueue <- function(queueIn, add){
 queueIn$last$follow <- new.env()
 queueIn$last$follow$prev <- queueIn$last
 queueIn$last <- queueIn$last$follow
-queueIn$last$val <- add
+queueIn$last$val <- as.numeric(add)
 queueIn$last$follow <- NULL
 
 }
+
+forwardEnqueueAtTimet <- function (queueIn, funcTime) {
+	print (c("entering forwardEnqueueAtTimet", funcTime, (funcTime >= queueIn$val), (funcTime <= queueIn$follow$val), str(funcTime), str(queueIn$val), str(queueIn$follow$val)))
+#
+#  need cases where adding to front of queue, when (funcTime <= queueIn$val), and to end of queue, when funcTime > queueIn$follow$val
+#
+	if (funcTime >= queueIn$val & funcTime <= queueIn$follow$val )  {
+		print (c("adding time", funcTime, "between", queueIn$val, "and", queueIn$follow$val))
+		oldFollow <- queueIn$follow
+		oldPrev <- queueIn$follow$prev
+		queueIn$follow <- new.env()
+		queueIn$follow$prev <- oldPrev
+		oldPrev$follow <- queueIn$follow
+		oldFollow$prev <- queueIn$follow
+		queueIn$follow$follow <- oldFollow
+		queueIn$follow$val <- as.numeric(funcTime)
+		return (TRUE)
+		} else {
+			print (c("continuing to search for queue spot", funcTime, queueIn$val, queueIn$follow$val))
+			forwardEnqueueAtTimet (queueIn$follow, funcTime)
+			}
+	}
 
 ## return front of queue and remove it
 dequeue <- function(queueIn){
@@ -99,14 +121,35 @@ if (n == 0) {
 	}
 }
 
+reverseTraverseQueue <- function(queueIn, n) {
+	if (n == 0) {
+		return
+	} else {
+		n <- n-1
+#		print (c("prev=", queueIn$prev, "val=", queueIn$val, "follow=", queueIn$follow))
+		print (queueIn$val)
+		reverseTraverseQueue (queueIn$prev, n)
+		}
+	}
+
 }
 
-N = 10
+N = 8
 qq <- new.queue()
-for(i in 1:N){
+i <- 1.1
+while (i < N) {
 	enqueue(qq,i)
+	i <- i + 1
 }
-traverseQueue(qq$front$follow,8)
+N <- 7
+
+traverseQueue(qq$front$follow, N)
+reverseTraverseQueue (qq$last, N)
+
+success <- forwardEnqueueAtTimet (qq$front$follow, .7)
+
+traverseQueue(qq$front$follow, N)
+reverseTraverseQueue (qq$last, N)
 
 #while (! is.empty(qq)) {
 #	print(dequeue(qq))
