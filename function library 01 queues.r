@@ -51,31 +51,22 @@
 
 {
 new.queue <- function() {
-returned_queue <- new.env()
-returned_queue$front <- new.env()
-returned_queue$front$follow <- NULL
-returned_queue$front$prev <- NULL
-returned_queue$last <- returned_queue$front
+returned_queue <- new.env()   						# let's label this new environment as e1
+returned_queue$head <- new.env()					# e2
+returned_queue$tail <- new.env()					# e3, but it's always at the end of the queue
+returned_queue$follow <- returned_queue$head		# e1-> follow is assigned to point to e2
+returned_queue$follow$follow <- returned_queue$head	# e2 -> follow points forward to e3
+returned_queue$tail$prev <- returned_queue$head		# e3 points back to e2
+returned_queue$head$follow <- returned_queue$tail	# e1->e2->follow is assigned and points to e3
+returned_queue$head$prev <- NULL					# e1->e2-> prev is assigned NULL
+returned_queue$tail$follow <- NULL					# e1->e3->follow is assigned NULL - nothing follows the end
+returned_queue$head$val <- 0						# queue implementation is designed for all positive values.  The "null" header environment always has a value of zero.
+returned_queue$tail$val <- .Machine$integer.max		# tail of the queue is always the maximum "val" that the queue can hold
 return(returned_queue)
 }
 
-
-## add to end of queue
-enqueue <- function(queueIn, add){
-queueIn$last$follow <- new.env()
-queueIn$last$follow$prev <- queueIn$last
-queueIn$last <- queueIn$last$follow
-queueIn$last$val <- as.numeric(add)
-queueIn$last$follow <- NULL
-
-}
-
 forwardEnqueueAtTimet <- function (queueIn, funcTime) {
-	print (c("entering forwardEnqueueAtTimet", funcTime, (funcTime >= queueIn$val), (funcTime <= queueIn$follow$val), str(funcTime), str(queueIn$val), str(queueIn$follow$val)))
-#
-#  need cases where adding to front of queue, when (funcTime <= queueIn$val), and to end of queue, when funcTime > queueIn$follow$val
-#
-	if (funcTime >= queueIn$val & funcTime <= queueIn$follow$val )  {
+	if (funcTime >= queueIn$val & funcTime <= queueIn$follow$val )  {		# assumes this queue has a "null" or zero dummy header environment and a "max" tail environment
 		print (c("adding time", funcTime, "between", queueIn$val, "and", queueIn$follow$val))
 		oldFollow <- queueIn$follow
 		oldPrev <- queueIn$follow$prev
@@ -94,18 +85,24 @@ forwardEnqueueAtTimet <- function (queueIn, funcTime) {
 
 ## return front of queue and remove it
 dequeue <- function(queueIn){
-if (is.empty(queueIn)) {
-	stop("Attempting to take element from empty queue")
-	}
-value <- queueIn$front$follow$val
-queueIn$front <- queueIn$front$follow
-queueIn$front$follow$prev <- NULL
-return(value)
+	if (is.empty(queueIn)) {
+		stop("Attempting to take element from empty queue")			# this would mean that the sim has created no additional time-value entries to process
+		}
+	value <- queueIn$head$follow$val
+	queueIn$head$follow$prev <- queueIn$head
+	queueIn$head$follow <- queueIn$head$follow$follow
+	return(value)
 }
 
-## check to see if queue is empty
+## check to see if queue is empty.... the min/max dummy values (environments) at the head and tail of the queue need to be ignored and always kept intact
+## queue is empty when the head == tail
+#
 is.empty <- function(queueIn){
-return(is.null(queueIn$front$follow))
+	if (identical(queueIn$tail, queueIn$head$follow)) {
+		return (TRUE)
+	} else {
+		return (FALSE) 
+		}
 }
 
 ## walk the queue and print out all values
@@ -138,20 +135,26 @@ N = 8
 qq <- new.queue()
 i <- 1.1
 while (i < N) {
-	enqueue(qq,i)
+#	enqueue(qq,i)
+	forwardEnqueueAtTimet (qq$head, i)					# start recursion pointing to e2 (qq points to e1, e1$head points to e2
 	i <- i + 1
 }
 N <- 7
 
-traverseQueue(qq$front$follow, N)
-reverseTraverseQueue (qq$last, N)
+traverseQueue(qq$head$follow, N)
+reverseTraverseQueue (qq$tail$prev, N)
 
-success <- forwardEnqueueAtTimet (qq$front$follow, .7)
+success <- forwardEnqueueAtTimet (qq$head, .7)
+success <- forwardEnqueueAtTimet (qq$head, 3.7)
+success <- forwardEnqueueAtTimet (qq$head, 5.7)
+success <- forwardEnqueueAtTimet (qq$head, 13.7)
 
-traverseQueue(qq$front$follow, N)
-reverseTraverseQueue (qq$last, N)
+N <- N + 4
+
+traverseQueue(qq$head$follow, N)
+reverseTraverseQueue (qq$tail$prev, N)
 
 #while (! is.empty(qq)) {
-#	print(dequeue(qq))
+#	print(dequeue(qq$head$follow))
 #}
 
